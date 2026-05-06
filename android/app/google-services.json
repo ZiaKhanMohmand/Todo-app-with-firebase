@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "801261017559",
+    "project_id": "metapifirebase",
+    "storage_bucket": "metapifirebase.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:801261017559:android:5a4519d91a896209399392",
+        "android_client_info": {
+          "package_name": "com.example.metapi_todo_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBPx2170xhiYtO464HNKn2Tha6IdjXCgfY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
