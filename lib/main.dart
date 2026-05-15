@@ -4,6 +4,7 @@ import 'firebase_options.dart';
 import 'package:metapi_todo_app/dashboard.dart';
 import 'loginScreen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,7 +19,7 @@ void main() async {
     }
     // duplicate-app is fine, Firebase is already initialized
   }
-
+  await MobileAds.instance.initialize();
   runApp(const MyApp());
 }
 

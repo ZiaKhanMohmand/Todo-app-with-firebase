@@ -1,6 +1,48 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+
+// ✅ Interstitial Ad Helper Class
+class InterstitialAdHelper {
+  InterstitialAd? _interstitialAd;
+
+  final String _adUnitId = 'ca-app-pub-3940256099942544/1033173712'; // Test ID
+
+  void loadAd() {
+    InterstitialAd.load(
+      adUnitId: _adUnitId,
+      request: const AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (ad) {
+          _interstitialAd = ad;
+        },
+        onAdFailedToLoad: (error) {
+          _interstitialAd = null;
+        },
+      ),
+    );
+  }
+
+  void showAd() {
+    if (_interstitialAd == null) return;
+    _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+      onAdDismissedFullScreenContent: (ad) {
+        ad.dispose();
+        loadAd(); // ✅ Load next ad after dismiss
+      },
+      onAdFailedToShowFullScreenContent: (ad, error) {
+        ad.dispose();
+      },
+    );
+    _interstitialAd!.show();
+    _interstitialAd = null;
+  }
+
+  void dispose() {
+    _interstitialAd?.dispose();
+  }
+}
 
 class AddTaskScreen extends StatefulWidget {
   final String? taskId;
@@ -14,10 +56,12 @@ class AddTaskScreen extends StatefulWidget {
 
 class _AddTaskScreenState extends State<AddTaskScreen> {
   final TextEditingController taskController = TextEditingController();
+  final InterstitialAdHelper _adHelper = InterstitialAdHelper(); // ✅ Instance
 
   @override
   void initState() {
     super.initState();
+    _adHelper.loadAd();
     if (widget.taskText != null) {
       taskController.text = widget.taskText!;
     }
@@ -26,10 +70,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
 
   Future<void> _migrateLegacyTasks() async {
     final uid = FirebaseAuth.instance.currentUser!.uid;
-
-    // ✅ Fetch ALL tasks (no filter) and check in Dart
     final snapshot = await FirebaseFirestore.instance.collection('tasks').get();
-
     for (final doc in snapshot.docs) {
       final data = doc.data();
       if (!data.containsKey('userId') || data['userId'] == null) {
@@ -41,6 +82,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   @override
   void dispose() {
     taskController.dispose();
+    _adHelper.dispose(); // ✅ Dispose ad
     super.dispose();
   }
 
@@ -78,6 +120,8 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
           ),
         );
       }
+
+      _adHelper.showAd(); // ✅ Show ad after task saved
     } catch (e) {
       print("Error: $e");
     }
@@ -105,7 +149,6 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       );
       return;
     }
-
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -127,7 +170,6 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
         if (snapshot.hasError) {
           return const Center(child: Text('Failed to load tasks'));
         }
-
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
@@ -185,9 +227,8 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 leading: Checkbox(
                   value: isDone,
                   activeColor: Colors.green,
-                  onChanged: (value) {
-                    toggleTaskStatus(doc.id, value ?? false);
-                  },
+                  onChanged: (value) =>
+                      toggleTaskStatus(doc.id, value ?? false),
                 ),
                 title: Text(
                   title,

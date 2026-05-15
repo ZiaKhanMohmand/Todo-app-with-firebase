@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:metapi_todo_app/profile.dart';
 import 'package:metapi_todo_app/addTask.dart';
+import 'package:metapi_todo_app/widgets/BannerAdWidget.dart';
 
 class Dashboard extends StatelessWidget {
   const Dashboard({super.key});
@@ -22,61 +23,74 @@ class Dashboard extends StatelessWidget {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 10),
-            Text(
-              "Welcome 👋",
-              style: TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.bold,
-                color: Colors.green.shade800,
-              ),
-            ),
-            const SizedBox(height: 5),
-            Text(
-              "Manage your app from here",
-              style: TextStyle(fontSize: 16, color: Colors.green.shade600),
-            ),
-            const SizedBox(height: 30),
-            Expanded(
-              child: GridView.count(
-                crossAxisCount: 2,
-                crossAxisSpacing: 15,
-                mainAxisSpacing: 15,
+      body: Column(
+        children: [
+          // ✅ All screen content
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  dashboardCard(
-                    icon: Icons.person,
-                    title: "Profile",
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ProfileScreen(),
-                        ),
-                      );
-                    },
+                  const SizedBox(height: 10),
+                  Text(
+                    "Welcome 👋",
+                    style: TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green.shade800,
+                    ),
                   ),
-                  dashboardCard(
-                    icon: Icons.task,
-                    title: "Tasks",
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const AddTaskScreen(),
+                  const SizedBox(height: 5),
+                  Text(
+                    "Manage your app from here",
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.green.shade600,
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  Expanded(
+                    child: GridView.count(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 15,
+                      mainAxisSpacing: 15,
+                      children: [
+                        dashboardCard(
+                          icon: Icons.person,
+                          title: "Profile",
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const ProfileScreen(),
+                              ),
+                            );
+                          },
                         ),
-                      );
-                    },
+                        dashboardCard(
+                          icon: Icons.task,
+                          title: "Tasks",
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const AddTaskScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
-          ],
-        ),
+          ),
+
+          // ✅ Banner Ad fixed at bottom
+          const BannerAdWidget(),
+        ],
       ),
     );
   }
