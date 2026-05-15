@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:metapi_todo_app/profile.dart';
 import 'package:metapi_todo_app/addTask.dart';
-import 'package:metapi_todo_app/loginScreen.dart';
 
 class Dashboard extends StatelessWidget {
   const Dashboard({super.key});
@@ -10,31 +10,24 @@ class Dashboard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.green.shade50,
-
       appBar: AppBar(
         title: const Text("Dashboard"),
         backgroundColor: Colors.green,
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () {
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (context) => const LoginScreen()),
-                (route) => false,
-              );
+            onPressed: () async {
+              await FirebaseAuth.instance.signOut();
             },
           ),
         ],
       ),
-
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 10),
-
             Text(
               "Welcome 👋",
               style: TextStyle(
@@ -43,24 +36,18 @@ class Dashboard extends StatelessWidget {
                 color: Colors.green.shade800,
               ),
             ),
-
             const SizedBox(height: 5),
-
             Text(
               "Manage your app from here",
               style: TextStyle(fontSize: 16, color: Colors.green.shade600),
             ),
-
             const SizedBox(height: 30),
-
-            // GRID MENU
             Expanded(
               child: GridView.count(
                 crossAxisCount: 2,
                 crossAxisSpacing: 15,
                 mainAxisSpacing: 15,
                 children: [
-                  // 👤 PROFILE CARD
                   dashboardCard(
                     icon: Icons.person,
                     title: "Profile",
@@ -73,8 +60,6 @@ class Dashboard extends StatelessWidget {
                       );
                     },
                   ),
-
-                  // 📝 TASKS CARD
                   dashboardCard(
                     icon: Icons.task,
                     title: "Tasks",
@@ -87,28 +72,6 @@ class Dashboard extends StatelessWidget {
                       );
                     },
                   ),
-
-                  // 📅 SCHEDULE
-                  // dashboardCard(
-                  //   icon: Icons.calendar_today,
-                  //   title: "Schedule",
-                  //   onTap: () {
-                  //     ScaffoldMessenger.of(context).showSnackBar(
-                  //       const SnackBar(content: Text("Coming soon")),
-                  //     );
-                  //   },
-                  // ),
-
-                  // ⚙️ SETTINGS
-                  // dashboardCard(
-                  //   icon: Icons.settings,
-                  //   title: "Settings",
-                  //   onTap: () {
-                  //     ScaffoldMessenger.of(context).showSnackBar(
-                  //       const SnackBar(content: Text("Coming soon")),
-                  //     );
-                  //   },
-                  // ),
                 ],
               ),
             ),
@@ -118,7 +81,6 @@ class Dashboard extends StatelessWidget {
     );
   }
 
-  // CARD WIDGET WITH CLICK SUPPORT
   Widget dashboardCard({
     required IconData icon,
     required String title,

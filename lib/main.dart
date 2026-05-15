@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'package:metapi_todo_app/dashboard.dart';
 import 'loginScreen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -7,7 +8,16 @@ import 'package:firebase_auth/firebase_auth.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp();
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } on FirebaseException catch (e) {
+    if (e.code != 'duplicate-app') {
+      rethrow;
+    }
+    // duplicate-app is fine, Firebase is already initialized
+  }
 
   runApp(const MyApp());
 }

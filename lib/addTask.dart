@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AddTaskScreen extends StatefulWidget {
-  final String? taskId; // null = add, not null = edit
-  final String? taskText; // existing text (for edit)
+  final String? taskId;
+  final String? taskText;
 
   const AddTaskScreen({super.key, this.taskId, this.taskText});
 
@@ -17,10 +18,23 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   @override
   void initState() {
     super.initState();
-
-    // 🔥 Pre-fill text if editing
     if (widget.taskText != null) {
       taskController.text = widget.taskText!;
+    }
+    _migrateLegacyTasks();
+  }
+
+  Future<void> _migrateLegacyTasks() async {
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+
+    // ✅ Fetch ALL tasks (no filter) and check in Dart
+    final snapshot = await FirebaseFirestore.instance.collection('tasks').get();
+
+    for (final doc in snapshot.docs) {
+      final data = doc.data();
+      if (!data.containsKey('userId') || data['userId'] == null) {
+        await doc.reference.update({'userId': uid});
+      }
     }
   }
 
@@ -30,38 +44,40 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     super.dispose();
   }
 
-  // 🔥 ADD + UPDATE FUNCTION
   void submitTask() async {
     final text = taskController.text.trim();
     if (text.isEmpty) return;
 
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+
     try {
       if (widget.taskId == null) {
-        // ✅ ADD TASK
         await FirebaseFirestore.instance.collection('tasks').add({
+          'userId': uid,
           'title': text,
           'isDone': false,
           'createdAt': FieldValue.serverTimestamp(),
         });
         taskController.clear();
       } else {
-        // ✅ UPDATE TASK
         await FirebaseFirestore.instance
             .collection('tasks')
             .doc(widget.taskId)
             .update({'title': text, 'updatedAt': FieldValue.serverTimestamp()});
-        Navigator.pop(context);
+        if (mounted) Navigator.pop(context);
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            widget.taskId == null
-                ? "Task Added Successfully"
-                : "Task Updated Successfully",
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              widget.taskId == null
+                  ? "Task Added Successfully"
+                  : "Task Updated Successfully",
+            ),
           ),
-        ),
-      );
+        );
+      }
     } catch (e) {
       print("Error: $e");
     }
@@ -99,9 +115,12 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   }
 
   Widget buildTaskList() {
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection('tasks')
+          .where('userId', isEqualTo: uid)
           .orderBy('createdAt', descending: true)
           .snapshots(),
       builder: (context, snapshot) {
@@ -127,7 +146,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
         return ListView.separated(
           padding: const EdgeInsets.only(bottom: 20),
           itemCount: docs.length,
-          separatorBuilder: (_, _) => const SizedBox(height: 12),
+          separatorBuilder: (_, __) => const SizedBox(height: 12),
           itemBuilder: (context, index) {
             final doc = docs[index];
             final data = doc.data() as Map<String, dynamic>;
@@ -180,7 +199,6 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   ),
                 ),
                 subtitle: Text(
-                  // "${isDone ? 'Completed' : 'Pending'} • at ${time != null ? '${TimeOfDay.fromDateTime(time).format(context)} on ${time.day}/${time.month}/${time.year}' : 'Date & Time not available'}",
                   "${isDone ? 'Completed' : 'Pending'} • at $displayTime",
                   style: TextStyle(color: Colors.green.shade600),
                 ),
@@ -233,7 +251,6 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 ),
               ),
             ),
-
             const SizedBox(height: 20),
             SizedBox(
               width: double.infinity,
@@ -252,9 +269,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 ),
               ),
             ),
-
             const SizedBox(height: 24),
-
             Text(
               'Your Tasks',
               style: TextStyle(
@@ -263,9 +278,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 color: Colors.green.shade800,
               ),
             ),
-
             const SizedBox(height: 12),
-
             Expanded(child: buildTaskList()),
           ],
         ),
